@@ -1,5 +1,5 @@
-import numpy as np
-import cv2
+import numpy as np # type: ignore
+import cv2 # type: ignore
 
 while True:
     # Create a blank image of size 300x300 with 3 color channels (initialized to black)

@@ -2,8 +2,8 @@
 
 1. **Activate the Conda Virtual Environment:**
    - Open a terminal.
-   - Use the command below to activate the `cv` conda environment:
-     conda activate cv
+   - Use the command below to activate the cv conda environment:
+     `conda activate cv`
 
 2. **Run Your Script:**
    - Navigate to the directory containing this script:
@@ -28,4 +28,14 @@
 6. **Exit the Terminal:**
    - Once you're finished, you can exit the terminal by typing:
      `exit`
-'''
+
+ASL Dataset: [Link](https://www.kaggle.com/datasets/grassknoted/asl-alphabet?resource=download-directory&select=asl_alphabet_train)
+
+
+Some dependencies:
+- numpy
+- openCV
+- matplotlib
+- keras
+- tensorflow
+- pillow
