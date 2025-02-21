@@ -3,47 +3,58 @@ from tensorflow.keras.applications import MobileNetV2 # type: ignore
 from tensorflow.keras.models import Model # type: ignore
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D # type: ignore
 from tensorflow.keras.preprocessing.image import ImageDataGenerator # type: ignore
+from tensorflow.keras.models import load_model # type: ignore
+import os # type: ignore
 
 import numpy as np # type: ignore
 import cv2 # type: ignore
 
-# Load pre-trained MobileNetV2 (without the top classification layer)
-base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(128, 128, 3))
+from load_and_predict import load_and_predict  # Import the function
 
-# Freeze the base model layers (to use as feature extractor)
-base_model.trainable = False
 
-# Add custom classification head
-x = base_model.output
-x = GlobalAveragePooling2D()(x)  # Flatten feature maps
-x = Dense(128, activation='relu')(x)
-x = Dense(29, activation='softmax')(x)  # 26 ASL letters
 
-# Define final model
-model = Model(inputs=base_model.input, outputs=x)
+if os.path.exists('../saved_models/asl_model.h5'):
+    print("Loading saved model ...")
+    model = load_model('../saved_models/asl_model.h5')  # Load the saved model
+else:
+    print("No saved model training from scratch ...")
 
-# Compile model
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    # Load pre-trained MobileNetV2 (without the top classification layer)
+    base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(128, 128, 3))
 
-model.summary()  # Print model architecture
+    # Freeze the base model layers (to use as feature extractor)
+    base_model.trainable = False
 
-train_datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
+    # Add custom classification head
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)  # Flatten feature maps
+    x = Dense(128, activation='relu')(x)
+    x = Dense(29, activation='softmax')(x)  # 26 ASL letters
 
-train_generator = train_datagen.flow_from_directory(
-    'asl_alphabet_train/', target_size=(128, 128), batch_size=32, class_mode='categorical', subset='training')
+    # Define final model
+    model = Model(inputs=base_model.input, outputs=x)
 
-val_generator = train_datagen.flow_from_directory(
-    'asl_alphabet_train/', target_size=(128, 128), batch_size=32, class_mode='categorical', subset='validation')
+    # Compile model
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-history = model.fit(train_generator, validation_data=val_generator, epochs=1)
+    model.summary()  # Print model architecture
 
-# # Load an image (replace 'test.jpg' with your own ASL image)
-# img = cv2.imread('test.jpg')
-# img = cv2.resize(img, (128, 128))
-# img = img / 255.0  # Normalize
-# img = np.expand_dims(img, axis=0)  # Add batch dimension
+    train_datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
 
-# # Predict
-# pred = model.predict(img)
-# class_idx = np.argmax(pred)
-# print(f'Predicted ASL Letter: {chr(65 + class_idx)}')  # Convert to letter
+    train_generator = train_datagen.flow_from_directory(
+        'asl_alphabet_train/', target_size=(128, 128), batch_size=32, class_mode='categorical', subset='training')
+
+    val_generator = train_datagen.flow_from_directory(
+        'asl_alphabet_train/', target_size=(128, 128), batch_size=32, class_mode='categorical', subset='validation')
+        
+    history = model.fit(train_generator, validation_data=val_generator, epochs=1)
+    
+    model.save('../saved_models/asl_model.h5')
+    print("Model saved!")
+
+# Let's see how they test:
+
+# Test with different ASL images
+load_and_predict(model, 'asl_alphabet_test/A_test.jpg')
+load_and_predict(model, 'asl_alphabet_test/B_test.jpg')
+load_and_predict(model, 'asl_alphabet_test/Z_test.jpg')
